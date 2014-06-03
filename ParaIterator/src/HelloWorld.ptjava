@@ -1,3 +1,10 @@
+
+	import pi.*;
+import pt.runtime.TaskIDGroup;
+
+import java.util.Collection;
+import java.util.List;
+	
 public class HelloWorld {
 	
 	private void notifyFunc() {
@@ -5,49 +12,44 @@ public class HelloWorld {
 	}
 	
 	public static void main(String[] args) {
-		
-		System.out.println("(1)");
-		
-		hello("Sequential");
-		
-		System.out.println("(2)");
-		
-		TaskID id1 = oneoff_hello();
-		
-		System.out.println("(3)");
-		
-		HelloWorld hw = new HelloWorld();
-		
-		TaskIDGroup id2 = multi_hello() notify(hw::notifyFunc());
-		
-		System.out.println("(4)");
-		
-		TaskID id3 = interactive_hello();
-		
-		System.out.println("(5)");
-		
-		TaskID id4 = new HelloWorld().oneoff_hello2();
-		
-		System.out.println("(6)");
-		
-		TaskIDGroup g = new TaskIDGroup(4);
-		g.add(id1);
-		g.add(id2);
-		g.add(id3);
-		g.add(id4);
-		System.out.println("** Going to wait for the tasks to execute... ");
-		try {
-			g.waitTillFinished();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		List<String> list = new ArrayList<String>();
+		for (Integer j = 1; j <= 50; j++){
+			list.add(j.toString());
 		}
-		System.out.println("** Done! All tasks have now completed.");
+		System.out.println("Created list");
+		Collection<String> elements = list;
+		
+		int numOfTasks = 5;
+		
+		ParIterator<String> pi = TaskAwareParIteratorFactory.createParIterator(elements, 4, numOfTasks,ParIterator.Schedule.TASKAWARE, 3);
+		
+		TaskIDGroup g = new TaskIDGroup(numOfTasks);
+		
+		for(int i=0; i<numOfTasks; i++){
+			TaskID id = parataskTest(pi, i);
+			g.add(id);
+		}
+		pi.notifyAll();
+		
+		
+		System.out.println("Like"+ g.groupSize());
+		System.out.println("Worked");
+		
 	}
 
 	private static void hello(String name) {
 		System.out.println("Hello from " + name);
+	}
+	
+	TASK public static void parataskTest(ParIterator<String> pi, int i) {
+
+		pi.localBreak();
+		System.out.println("start of task "+i);
+		while (pi.hasNext()) {
+			String elementString = pi.next();
+			System.out.println("task "+i+" is es " +elementString);
+		}
+		System.out.println("end of task "+i);
 	}
 	
 	TASK private static void oneoff_hello() {
